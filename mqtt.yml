@@ -1,0 +1,24 @@
+
+
+services:
+  emqx:
+    image: emqx/emqx:latest
+    ports:
+      - "1883:1883" # MQTT
+      - "18083:18083" # Dashboard
+   #   - "8083:8083" # MQTT over WebSocket
+      
+    
+    restart: always
+    environment: 
+      EMQX_NAME: mass
+      EMQX_HOST: 127.0.0.1
+    volumes:
+      - vol-emqx-data:/opt/emqx/data
+      - vol-emqx-log:/opt/emqx/log
+
+volumes:
+  vol-emqx-data:
+    name: emqx-data  #Dat a EMQX to retain in case of container restart
+  vol-emqx-log:
+    name: emqx-log  #Log EMQX 

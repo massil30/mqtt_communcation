@@ -1,6 +1,8 @@
 import paho.mqtt.client as mqtt
 import time
 import random
+from dotenv import load_dotenv
+import os
 
 # MQTT broker details
 BROKER = "test.mosquitto.org"  # You can replace this with your broker IP
