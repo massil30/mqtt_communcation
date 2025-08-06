@@ -2,36 +2,56 @@ import paho.mqtt.client as mqtt
 import time
 import random
 
-BROKER = "broker.hivemq.com"  # Public broker for testing
+# MQTT broker details
+BROKER = "test.mosquitto.org"  # You can replace this with your broker IP
 PORT = 1883
-TOPIC_SUB = "Device1/commands"
+CLIENT_ID = "PythonMQTTClient"
+TOPIC_SUB = "Device1/temperature"
 TOPIC_PUB = "Device1/temperature"
-CLIENT_ID = "Device1Client"
 
+# Called when the client receives a CONNACK response from the server
 def on_connect(client, userdata, flags, rc):
-    print("Connected with result code", rc)
-    client.subscribe(TOPIC_SUB)
-    print(f"Subscribed to {TOPIC_SUB}")
+    if rc == 0:
+        print("✅ Connected to broker")
+        client.subscribe(TOPIC_SUB)
+    else:
+        print(f"❌ Failed to connect, return code {rc}")
 
+# Called when a PUBLISH message is received from the server
 def on_message(client, userdata, msg):
-    print(f"Received message on {msg.topic}: {msg.payload.decode()}")
+    print(f"📩 Message received on {msg.topic}: {msg.payload.decode()}")
 
-client = mqtt.Client(CLIENT_ID)
-client.on_connect = on_connect
-client.on_message = on_message
+def publish_temperature(client):
+    # Simulate temperature value
+    temperature = round(random.uniform(20.0, 30.0), 2)
+    result = client.publish(TOPIC_PUB, f"{temperature}")
+    status = result[0]
+    if status == 0:
+        print(f"📤 Sent temperature: {temperature}°C")
+    else:
+        print("❌ Failed to send message")
 
-client.connect(BROKER, PORT, 60)
-client.loop_start()
+def main():
+    client = mqtt.Client(client_id=CLIENT_ID)
 
-try:
-    while True:
-        # Simulate temperature reading
-        temperature = round(random.uniform(20.0, 30.0), 2)
-        client.publish(TOPIC_PUB, str(temperature))
-        print(f"Published temperature: {temperature} to {TOPIC_PUB}")
-        time.sleep(5)
-except KeyboardInterrupt:
-    print("Exiting...")
-finally:
-    client.loop_stop()
-    client.disconnect()
+    # Assign callbacks
+    client.on_connect = on_connect
+    client.on_message = on_message
+
+    # Connect to broker
+    client.connect(BROKER, PORT, keepalive=60)
+
+    # Start network loop
+    client.loop_start()
+
+    try:
+        while True:
+            publish_temperature(client)
+            time.sleep(2)
+    except KeyboardInterrupt:
+        print("🛑 Exiting...")
+        client.loop_stop()
+        client.disconnect()
+
+if __name__ == "__main__":
+    main()
